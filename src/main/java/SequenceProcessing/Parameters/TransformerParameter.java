@@ -16,10 +16,14 @@ public class TransformerParameter extends LinearPerceptronParameter implements S
     private final ArrayList<Integer> outputHiddenLayers;
     private final ArrayList<Function> inputFunctions;
     private final ArrayList<Function> outputFunctions;
+    private final ArrayList<Double> gammaInputValues;
+    private final ArrayList<Double> gammaOutputValues;
+    private final ArrayList<Double> betaInputValues;
+    private final ArrayList<Double> betaOutputValues;
 
-    public TransformerParameter(int seed, double learningRate, double etaDecrease, double crossValidationRatio, int epoch, int wordEmbeddingLength, int multiHeadAttentionLength, int vocabularyLength, double epsilon, ArrayList<Integer> inputHiddenLayers, ArrayList<Integer> outputHiddenLayers, ArrayList<Function> inputActivationFunctions, ArrayList<Function> outputActivationFunctions) {
+    public TransformerParameter(int seed, double learningRate, double etaDecrease, double crossValidationRatio, int epoch, int wordEmbeddingLength, int multiHeadAttentionLength, int vocabularyLength, double epsilon, ArrayList<Integer> inputHiddenLayers, ArrayList<Integer> outputHiddenLayers, ArrayList<Function> inputActivationFunctions, ArrayList<Function> outputActivationFunctions,  ArrayList<Double> gammaInputValues, ArrayList<Double> gammaOutputValues, ArrayList<Double> betaInputValues, ArrayList<Double> betaOutputValues) {
         super(seed, learningRate, etaDecrease, crossValidationRatio, epoch);
-        this.L = wordEmbeddingLength;
+        this.L = wordEmbeddingLength + 1;
         this.N = multiHeadAttentionLength;
         this.V = vocabularyLength;
         this.epsilon = epsilon;
@@ -27,6 +31,26 @@ public class TransformerParameter extends LinearPerceptronParameter implements S
         this.outputHiddenLayers = outputHiddenLayers;
         this.inputFunctions = inputActivationFunctions;
         this.outputFunctions = outputActivationFunctions;
+        this.gammaInputValues = gammaInputValues;
+        this.gammaOutputValues = gammaOutputValues;
+        this.betaInputValues = betaInputValues;
+        this.betaOutputValues = betaOutputValues;
+    }
+
+    public double getGammaInputValue(int index) {
+        return  gammaInputValues.get(index);
+    }
+
+    public double getGammaOutputValue(int index) {
+        return gammaOutputValues.get(index);
+    }
+
+    public double getBetaInputValue(int index) {
+        return betaInputValues.get(index);
+    }
+
+    public double getBetaOutputValue(int index) {
+        return betaOutputValues.get(index);
     }
 
     public double getEpsilon() {

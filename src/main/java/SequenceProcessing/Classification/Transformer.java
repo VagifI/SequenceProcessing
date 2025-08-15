@@ -74,7 +74,7 @@ public class Transformer extends ComputationalGraph implements Serializable {
                 curLength++;
             }
         }
-        input2.setValue(new Tensor(values, new int[]{1, curLength / wordEmbeddingLength, wordEmbeddingLength}));
+        input2.setValue(new Tensor(values, new int[]{1, values.size() / wordEmbeddingLength, wordEmbeddingLength}));
         input2.setValue(positionalEncoding(input2.getValue(), wordEmbeddingLength));
     }
 
@@ -87,8 +87,14 @@ public class Transformer extends ComputationalGraph implements Serializable {
         ComputationalNode rootVariance1 = this.addEdge(variance1, new SquareRoot(parameter.getEpsilon()), false);
         ComputationalNode inverseRootVariance1 = this.addEdge(rootVariance1, new Inverse(), false);
         ComputationalNode lnValue1 = this.addEdge(inputC1Mean1Minus, inverseRootVariance1, false, true);
-        for (int j = 0; j < parameter.getL(); j++) {
-            data.add(1.0);
+        if (isInput) {
+            for (int j = 0; j < parameter.getL(); j++) {
+                data.add(parameter.getGammaInputValue(this.gammasInput.size()));
+            }
+        } else {
+            for (int j = 0; j < parameter.getL(); j++) {
+                data.add(parameter.getGammaOutputValue(this.gammasOutput.size()));
+            }
         }
         ComputationalNode gammaInput1 = new MultiplicationNode(true, false, new Tensor(data, new int[]{1, 1, parameter.getL()}), true);
         if (isInput) {
@@ -98,8 +104,14 @@ public class Transformer extends ComputationalGraph implements Serializable {
         }
         ComputationalNode lnValue1GammaInput1 = this.addEdge(lnValue1, gammaInput1, false);
         data.clear();
-        for (int j = 0; j < parameter.getL(); j++) {
-            data.add(0.0);
+        if (isInput) {
+            for (int j = 0; j < parameter.getL(); j++) {
+                data.add(parameter.getBetaInputValue(this.betasInput.size()));
+            }
+        } else {
+            for (int j = 0; j < parameter.getL(); j++) {
+                data.add(parameter.getBetaOutputValue(this.betasOutput.size()));
+            }
         }
         ComputationalNode betaInput1 = new ComputationalNode(true, false, null, new Tensor(data, new int[]{1, 1, parameter.getL()}));
         if (isInput) {
