@@ -99,7 +99,8 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
                 if (!currentOldLayers.isEmpty()) {
                     aw = this.addEdge(current, weights.get(i), false);
                     ComputationalNode oWithoutBias = this.addEdge(currentOldLayers.get(i), new RemoveBias(), false);
-                    ComputationalNode ou = this.addEdge(oWithoutBias, recurrentWeights.get(i), false);
+                    ComputationalNode maskedOWithoutBias = this.addEdge(oWithoutBias, switches.get(k), false);
+                    ComputationalNode ou = this.addEdge(maskedOWithoutBias, recurrentWeights.get(i), false);
                     ComputationalNode a = this.addAdditionEdge(aw, ou, false);
                     aFunction = this.addEdge(a, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i), true);
                 } else {
@@ -107,7 +108,7 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
                     aFunction = this.addEdge(aw, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i), true);
                 }
                 current = this.addEdge(aFunction, switches.get(k), false);
-                newOldLayers.add(current);
+                newOldLayers.add(aFunction);
             }
             currentOldLayers = (ArrayList<ComputationalNode>) newOldLayers.clone();
             ComputationalNode output = this.addEdge(current, weights.get(weights.size() - 1), false);
