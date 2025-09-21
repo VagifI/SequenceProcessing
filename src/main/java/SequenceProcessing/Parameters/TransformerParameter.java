@@ -1,12 +1,14 @@
 package SequenceProcessing.Parameters;
 
-import Classification.Parameter.LinearPerceptronParameter;
 import ComputationalGraph.Function;
+import ComputationalGraph.Initialization;
+import ComputationalGraph.NeuralNetworkParameter;
+import ComputationalGraph.Optimizer;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class TransformerParameter extends LinearPerceptronParameter implements Serializable {
+public class TransformerParameter extends NeuralNetworkParameter implements Serializable {
 
     private final int L;
     private final int N;
@@ -21,8 +23,8 @@ public class TransformerParameter extends LinearPerceptronParameter implements S
     private final ArrayList<Double> betaInputValues;
     private final ArrayList<Double> betaOutputValues;
 
-    public TransformerParameter(int seed, double learningRate, double etaDecrease, double crossValidationRatio, int epoch, int wordEmbeddingLength, int multiHeadAttentionLength, int vocabularyLength, double epsilon, ArrayList<Integer> inputHiddenLayers, ArrayList<Integer> outputHiddenLayers, ArrayList<Function> inputActivationFunctions, ArrayList<Function> outputActivationFunctions,  ArrayList<Double> gammaInputValues, ArrayList<Double> gammaOutputValues, ArrayList<Double> betaInputValues, ArrayList<Double> betaOutputValues) {
-        super(seed, learningRate, etaDecrease, crossValidationRatio, epoch);
+    public TransformerParameter(int seed, int epoch, Optimizer optimizer, Initialization initialization, int wordEmbeddingLength, int multiHeadAttentionLength, int vocabularyLength, double epsilon, ArrayList<Integer> inputHiddenLayers, ArrayList<Integer> outputHiddenLayers, ArrayList<Function> inputActivationFunctions, ArrayList<Function> outputActivationFunctions, ArrayList<Double> gammaInputValues, ArrayList<Double> gammaOutputValues, ArrayList<Double> betaInputValues, ArrayList<Double> betaOutputValues) {
+        super(seed, epoch, optimizer, initialization);
         this.L = wordEmbeddingLength + 1;
         this.N = multiHeadAttentionLength;
         this.V = vocabularyLength;
@@ -95,9 +97,5 @@ public class TransformerParameter extends LinearPerceptronParameter implements S
 
     public int getOutputSize() {
         return outputHiddenLayers.size();
-    }
-
-    public void setLearningRate() {
-        this.learningRate *= etaDecrease;
     }
 }

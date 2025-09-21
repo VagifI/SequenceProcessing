@@ -1,19 +1,21 @@
 package SequenceProcessing.Parameters;
 
-import Classification.Parameter.LinearPerceptronParameter;
 import ComputationalGraph.Function;
+import ComputationalGraph.Initialization;
+import ComputationalGraph.NeuralNetworkParameter;
+import ComputationalGraph.Optimizer;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class RecurrentNeuralNetworkParameter extends LinearPerceptronParameter implements Serializable {
+public class RecurrentNeuralNetworkParameter extends NeuralNetworkParameter implements Serializable {
 
     private final ArrayList<Integer> hiddenLayers;
     private final ArrayList<Function> functions;
     private final int classLabelSize;
 
-    public RecurrentNeuralNetworkParameter(int seed, double learningRate, double etaDecrease, double crossValidationRatio, int epoch, ArrayList<Integer> hiddenLayers, ArrayList<Function> functions, int classLabelSize) {
-        super(seed, learningRate, etaDecrease, crossValidationRatio, epoch);
+    public RecurrentNeuralNetworkParameter(int seed, int epoch, Optimizer optimizer, Initialization initialization, ArrayList<Integer> hiddenLayers, ArrayList<Function> functions, int classLabelSize) {
+        super(seed, epoch, optimizer, initialization);
         this.hiddenLayers = hiddenLayers;
         this.functions = functions;
         this.classLabelSize = classLabelSize;
@@ -33,9 +35,5 @@ public class RecurrentNeuralNetworkParameter extends LinearPerceptronParameter i
 
     public Integer getHiddenLayer(int index) {
         return hiddenLayers.get(index);
-    }
-
-    public void setLearningRate() {
-        this.learningRate *= etaDecrease;
     }
 }

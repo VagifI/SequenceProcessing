@@ -1,6 +1,5 @@
 package SequenceProcessing.Classification;
 
-import Classification.Parameter.Parameter;
 import Classification.Performance.ClassificationPerformance;
 import ComputationalGraph.*;
 
@@ -53,7 +52,7 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
 
     // Many-to-Many RNN
     @Override
-    public void train(ArrayList<Tensor> trainSet, Parameter parameters) {
+    public void train(ArrayList<Tensor> trainSet, NeuralNetworkParameter parameters) {
         Random random = new Random(parameters.getSeed());
         int timeStep = -1;
         for (Tensor tensor : trainSet) {
@@ -64,26 +63,13 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
         }
         ArrayList<ComputationalNode> weights = new ArrayList<>();
         ArrayList<ComputationalNode> recurrentWeights = new ArrayList<>();
-        ArrayList<Double> data = new ArrayList<>();
         int currentLength = wordEmbeddingLength + 1;
         for (int i = 0; i < ((RecurrentNeuralNetworkParameter) parameters).size(); i++) {
-            data.clear();
-            for (int j = 0; j < currentLength * ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i); j++) {
-                data.add(-0.01 + (0.02 * random.nextDouble()));
-            }
-            weights.add(new MultiplicationNode(true, false, new Tensor(data, new int[]{currentLength, ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i)}), false));
-            data.clear();
-            for (int j = 0; j < ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i) * ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i); j++) {
-                data.add(-0.01 + (0.02 * random.nextDouble()));
-            }
-            recurrentWeights.add(new MultiplicationNode(true, false, new Tensor(data, new int[]{((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i), ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i)}), false));
+            weights.add(new MultiplicationNode(true, false, new Tensor(parameters.getInitialization().initialize(currentLength, ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i), random), new int[]{currentLength, ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i)}), false));
+            recurrentWeights.add(new MultiplicationNode(true, false, new Tensor(parameters.getInitialization().initialize(((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i), ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i), random), new int[]{((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i), ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i)}), false));
             currentLength = ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i) + 1;
         }
-        data.clear();
-        for (int j = 0; j < currentLength * ((RecurrentNeuralNetworkParameter) parameters).getClassLabelSize(); j++) {
-            data.add(-0.01 + (0.02 * random.nextDouble()));
-        }
-        weights.add(new MultiplicationNode(true, false, new Tensor(data, new int[]{currentLength, ((RecurrentNeuralNetworkParameter) parameters).getClassLabelSize()}), false));
+        weights.add(new MultiplicationNode(true, false, new Tensor(parameters.getInitialization().initialize(currentLength, ((RecurrentNeuralNetworkParameter) parameters).getClassLabelSize(), random), new int[]{currentLength, ((RecurrentNeuralNetworkParameter) parameters).getClassLabelSize()}), false));
         ArrayList<ComputationalNode> currentOldLayers = new ArrayList<>();
         ArrayList<ComputationalNode> outputNodes = new ArrayList<>();
         for (int k = 0; k < timeStep; k++) {
@@ -116,7 +102,7 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
         }
         this.concatEdges(outputNodes, 0);
         // Training
-        for (int i = 0; i < ((RecurrentNeuralNetworkParameter) parameters).getEpoch(); i++) {
+        for (int i = 0; i < parameters.getEpoch(); i++) {
             System.out.println("Epoch: " + (i + 1));
             // Shuffle
             for (int j = 0; j < trainSet.size(); j++) {
@@ -130,10 +116,10 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
             for (Tensor instance : trainSet) {
                 createInputTensors(instance, classLabels);
                 this.forwardCalculation();
-                this.backpropagation(((RecurrentNeuralNetworkParameter) parameters).getLearningRate(), classLabels);
+                this.backpropagation(parameters.getOptimizer(), classLabels);
                 classLabels.clear();
             }
-            ((RecurrentNeuralNetworkParameter) parameters).setLearningRate();
+            parameters.getOptimizer().setLearningRate();
         }
     }
 
