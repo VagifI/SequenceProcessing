@@ -2,11 +2,8 @@ package SequenceProcessing.Classification;
 
 import Classification.Performance.ClassificationPerformance;
 import ComputationalGraph.*;
-import ComputationalGraph.Function.Softmax;
-import ComputationalGraph.Function.Subtract;
-import ComputationalGraph.Node.ComputationalNode;
-import ComputationalGraph.Node.ConcatenatedNode;
-import ComputationalGraph.Node.MultiplicationNode;
+import ComputationalGraph.Function.*;
+import ComputationalGraph.Node.*;
 import Dictionary.*;
 import Math.Tensor;
 import Math.Vector;
@@ -79,7 +76,7 @@ public class Transformer extends ComputationalGraph implements Serializable {
     private ComputationalNode layerNormalization(ComputationalNode input, TransformerParameter parameter, boolean isInput, int[] lnSize) {
         ArrayList<Double> data = new ArrayList<>();
         ComputationalNode inputC1Mean = this.addEdge(input, new Mean(), false);
-        ComputationalNode mean1Minus = this.addEdge(inputC1Mean, new Subtract(), false);
+        ComputationalNode mean1Minus = this.addEdge(inputC1Mean, new Negation(), false);
         ComputationalNode inputC1Mean1Minus = this.addAdditionEdge(input, mean1Minus, false);
         ComputationalNode variance1 = this.addEdge(inputC1Mean1Minus, new Variance(), false);
         ComputationalNode rootVariance1 = this.addEdge(variance1, new SquareRoot(parameter.getEpsilon()), false);
