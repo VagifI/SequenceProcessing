@@ -18,15 +18,15 @@ import SequenceProcessing.Parameters.*;
 
 public class RecurrentNeuralNetworkModel extends ComputationalGraph implements Serializable {
 
-    private final int wordEmbeddingLength;
-    private final ArrayList<Switch> switches;
+    protected final int wordEmbeddingLength;
+    protected ArrayList<Switch> switches;
 
     public RecurrentNeuralNetworkModel(int wordEmbeddingLength) {
         this.wordEmbeddingLength = wordEmbeddingLength;
         this.switches = new ArrayList<>();
     }
 
-    private void createInputTensors(Tensor instance, ArrayList<Integer> classLabels) {
+    protected void createInputTensors(Tensor instance, ArrayList<Integer> classLabels) {
         int timeStep = (instance.getShape()[0] / (wordEmbeddingLength + 1));
         int j = 0;
         for (int i = 0; i < this.inputNodes.size(); i++) {
@@ -54,10 +54,29 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
         }
     }
 
-    // Many-to-Many RNN
-    @Override
-    public void train(ArrayList<Tensor> trainSet, NeuralNetworkParameter parameters) {
-        Random random = new Random(parameters.getSeed());
+    protected void train(ArrayList<Tensor> trainSet, NeuralNetworkParameter parameters, Random random) {
+        for (int i = 0; i < parameters.getEpoch(); i++) {
+            System.out.println("Epoch: " + (i + 1));
+            // Shuffle
+            for (int j = 0; j < trainSet.size(); j++) {
+                int i1 = random.nextInt(trainSet.size());
+                int i2 = random.nextInt(trainSet.size());
+                Tensor tmp = trainSet.get(i1);
+                trainSet.set(i1, trainSet.get(i2));
+                trainSet.set(i2, tmp);
+            }
+            ArrayList<Integer> classLabels = new ArrayList<>();
+            for (Tensor instance : trainSet) {
+                createInputTensors(instance, classLabels);
+                this.forwardCalculation();
+                this.backpropagation(parameters.getOptimizer(), classLabels);
+                classLabels.clear();
+            }
+            parameters.getOptimizer().setLearningRate();
+        }
+    }
+
+    protected int findTimeStep(ArrayList<Tensor> trainSet) {
         int timeStep = -1;
         for (Tensor tensor : trainSet) {
             int size = tensor.getShape()[0];
@@ -65,6 +84,14 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
                 timeStep = size / (wordEmbeddingLength + 1);
             }
         }
+        return timeStep;
+    }
+
+    // Many-to-Many RNN
+    @Override
+    public void train(ArrayList<Tensor> trainSet, NeuralNetworkParameter parameters) {
+        Random random = new Random(parameters.getSeed());
+        int timeStep = findTimeStep(trainSet);
         ArrayList<ComputationalNode> weights = new ArrayList<>();
         ArrayList<ComputationalNode> recurrentWeights = new ArrayList<>();
         int currentLength = wordEmbeddingLength + 1;
@@ -104,26 +131,7 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
         }
         ConcatenatedNode concatenatedNode = (ConcatenatedNode) this.concatEdges(outputNodes, 0);
         this.addEdge(concatenatedNode, new Softmax(), false);
-        // Training
-        for (int i = 0; i < parameters.getEpoch(); i++) {
-            System.out.println("Epoch: " + (i + 1));
-            // Shuffle
-            for (int j = 0; j < trainSet.size(); j++) {
-                int i1 = random.nextInt(trainSet.size());
-                int i2 = random.nextInt(trainSet.size());
-                Tensor tmp = trainSet.get(i1);
-                trainSet.set(i1, trainSet.get(i2));
-                trainSet.set(i2, tmp);
-            }
-            ArrayList<Integer> classLabels = new ArrayList<>();
-            for (Tensor instance : trainSet) {
-                createInputTensors(instance, classLabels);
-                this.forwardCalculation();
-                this.backpropagation(parameters.getOptimizer(), classLabels);
-                classLabels.clear();
-            }
-            parameters.getOptimizer().setLearningRate();
-        }
+        train(trainSet, parameters, random);
     }
 
     @Override
