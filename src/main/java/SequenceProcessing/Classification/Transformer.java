@@ -257,7 +257,7 @@ public class Transformer extends ComputationalGraph implements Serializable {
             do {
                 setInputNode(j, ((VectorizedWord) this.dictionary.getWord(currentWordIndex)).getVector(), this.inputNodes.get(1));
                 classLabels = this.predict();
-                if (goldClassLabels.size() >= classLabels.size() && classLabels.get(classLabels.size() - 1).equals(goldClassLabels.get(classLabels.size() - 1))) {
+                if (goldClassLabels.size() >= classLabels.size() && classLabels.get(classLabels.size() - 1).intValue() == goldClassLabels.get(classLabels.size() - 1)) {
                     count++;
                 }
                 total++;
