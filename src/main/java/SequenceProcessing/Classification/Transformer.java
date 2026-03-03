@@ -272,7 +272,7 @@ public class Transformer extends ComputationalGraph implements Serializable {
     }
 
     @Override
-    protected ArrayList<Double> getClassLabels(ComputationalNode computationalNode) {
+    protected ArrayList<Double> getOutputValue(ComputationalNode computationalNode) {
         ArrayList<Double> classLabels = new ArrayList<>();
         Tensor value = computationalNode.getValue();
         for (int i = 0; i < value.getShape()[0]; i++) {

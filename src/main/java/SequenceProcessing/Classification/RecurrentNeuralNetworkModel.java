@@ -135,7 +135,7 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
     }
 
     @Override
-    protected ArrayList<Double> getClassLabels(ComputationalNode outputNode) {
+    protected ArrayList<Double> getOutputValue(ComputationalNode outputNode) {
         ArrayList<Double> classLabels = new ArrayList<>();
         for (int i = 0; i < outputNode.getValue().getShape()[0]; i++) {
             int index = -1;
