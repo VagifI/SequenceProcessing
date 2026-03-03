@@ -12,13 +12,14 @@ import java.util.*;
 
 public class LongShortTermMemoryModel extends RecurrentNeuralNetworkModel implements Serializable {
 
-    public LongShortTermMemoryModel(int wordEmbeddingLength) {
-        super(wordEmbeddingLength);
+    public LongShortTermMemoryModel(NeuralNetworkParameter parameter, int wordEmbeddingLength) {
+        super(parameter, wordEmbeddingLength);
         this.switches = new ArrayList<>();
     }
 
     @Override
-    public void train(ArrayList<Tensor> trainSet, NeuralNetworkParameter parameters) {
+    public void train(ArrayList<Tensor> trainSet) {
+        RecurrentNeuralNetworkParameter parameters = (RecurrentNeuralNetworkParameter) this.getParameters();
         Random random = new Random(parameters.getSeed());
         int timeStep = findTimeStep(trainSet);
         ArrayList<ComputationalNode> weights = new ArrayList<>();
@@ -92,7 +93,13 @@ public class LongShortTermMemoryModel extends RecurrentNeuralNetworkModel implem
             outputNodes.add(this.addEdge(node, switches.get(k), false));
         }
         ConcatenatedNode concatenatedNode = (ConcatenatedNode) this.concatEdges(outputNodes, 0);
-        this.addEdge(concatenatedNode, new Softmax(), false);
+        this.outputNode = this.addEdge(concatenatedNode, new Softmax(), false);
+        ComputationalNode classLabelNode = new ComputationalNode();
+        this.inputNodes.add(classLabelNode);
+        ArrayList<ComputationalNode> lossInputs = new ArrayList<>();
+        lossInputs.add(this.outputNode);
+        lossInputs.add(classLabelNode);
+        this.addFunctionEdge(lossInputs, parameters.getLossFunction(), false);
         train(trainSet, parameters, random);
     }
 }

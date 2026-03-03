@@ -19,7 +19,8 @@ public class Transformer extends ComputationalGraph implements Serializable {
     private int startIndex;
     private int endIndex;
 
-    public Transformer(VectorizedDictionary dictionary) {
+    public Transformer(NeuralNetworkParameter parameter, VectorizedDictionary dictionary) {
+        super(parameter);
         this.dictionary = dictionary;
         for (int k = 0; k < this.dictionary.size(); k++) {
             if (this.dictionary.getWord(k).getName().equals("<S>")) {
@@ -45,9 +46,10 @@ public class Transformer extends ComputationalGraph implements Serializable {
         return new Tensor(values, tensor.getShape());
     }
 
-    private void createInputTensors(Tensor instance, ComputationalNode input1, ComputationalNode input2, ArrayList<Integer> classLabels, int wordEmbeddingLength) {
+    private void createInputTensors(Tensor instance, ComputationalNode input1, ComputationalNode input2, ComputationalNode input3, int wordEmbeddingLength, int outputSize) {
         boolean isOutput = false;
         int curLength = 0;
+        ArrayList<Integer> classLabels = new ArrayList<>();
         ArrayList<Double> values = new ArrayList<>();
         for (int i = 0; i < instance.getShape()[0]; i++) {
             double val = instance.getValue(new int[]{i});
@@ -69,8 +71,19 @@ public class Transformer extends ComputationalGraph implements Serializable {
                 curLength++;
             }
         }
+        ArrayList<Double> input3Values = new ArrayList<>();
+        for (Integer classLabel : classLabels) {
+            for (int j = 0; j < outputSize; j++) {
+                if (j == classLabel) {
+                    input3Values.add(1.0);
+                } else {
+                    input3Values.add(0.0);
+                }
+            }
+        }
         input2.setValue(new Tensor(values, new int[]{values.size() / wordEmbeddingLength, wordEmbeddingLength}));
         input2.setValue(positionalEncoding(input2.getValue(), wordEmbeddingLength));
+        input3.setValue(new Tensor(input3Values, new int[]{classLabels.size(), outputSize}));
     }
 
     private ComputationalNode layerNormalization(ComputationalNode input, TransformerParameter parameter, boolean isInput, int[] lnSize) {
@@ -162,53 +175,60 @@ public class Transformer extends ComputationalGraph implements Serializable {
     }
 
     @Override
-    public void train(ArrayList<Tensor> trainSet, NeuralNetworkParameter parameter) {
+    public void train(ArrayList<Tensor> trainSet) {
+        TransformerParameter parameter = (TransformerParameter) this.getParameters();
         int[] lnSize = new int[4];
         Random random = new Random(parameter.getSeed());
         // Encoder Block
         ComputationalNode input1 = new MultiplicationNode(false, true);
         this.inputNodes.add(input1);
-        ConcatenatedNode concatenatedNode1 = (ConcatenatedNode) this.concatEdges(multiHeadAttention(input1, ((TransformerParameter) parameter), false, random), 1);
-        ComputationalNode we = new MultiplicationNode(new Tensor(parameter.initializeWeights(((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getL(), random), new int[]{((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getL()}));
+        ConcatenatedNode concatenatedNode1 = (ConcatenatedNode) this.concatEdges(multiHeadAttention(input1, parameter, false, random), 1);
+        ComputationalNode we = new MultiplicationNode(new Tensor(parameter.initializeWeights(parameter.getL(), parameter.getL(), random), new int[]{parameter.getL(), parameter.getL()}));
         ComputationalNode c1 = this.addEdge(concatenatedNode1, we, false);
         ComputationalNode inputC1 = this.addAdditionEdge(input1, c1, false);
-        ComputationalNode y1 = layerNormalization(inputC1, ((TransformerParameter) parameter), true, lnSize);
-        ComputationalNode oe = this.addAdditionEdge(feedforwardNeuralNetwork(y1, ((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter), random, true), y1, false);
-        ComputationalNode encoder = layerNormalization(oe, ((TransformerParameter) parameter), true, lnSize);
+        ComputationalNode y1 = layerNormalization(inputC1, parameter, true, lnSize);
+        ComputationalNode oe = this.addAdditionEdge(feedforwardNeuralNetwork(y1, parameter.getL(), parameter, random, true), y1, false);
+        ComputationalNode encoder = layerNormalization(oe, parameter, true, lnSize);
         // Decoder Block
         ComputationalNode input2 = new MultiplicationNode(false, true);
         this.inputNodes.add(input2);
-        ConcatenatedNode concatenatedNode2 = (ConcatenatedNode) this.concatEdges(multiHeadAttention(input2, ((TransformerParameter) parameter), true, random), 1);
-        ComputationalNode wd1 = new MultiplicationNode(new Tensor(parameter.initializeWeights(((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getL(), random), new int[]{((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getL()}));
+        ConcatenatedNode concatenatedNode2 = (ConcatenatedNode) this.concatEdges(multiHeadAttention(input2, parameter, true, random), 1);
+        ComputationalNode wd1 = new MultiplicationNode(new Tensor(parameter.initializeWeights(parameter.getL(), parameter.getL(), random), new int[]{parameter.getL(), parameter.getL()}));
         ComputationalNode c2 = this.addEdge(concatenatedNode2, wd1, false);
         ComputationalNode inputC2 = this.addAdditionEdge(input2, c2, false);
-        ComputationalNode cd2 = layerNormalization(inputC2, ((TransformerParameter) parameter), false, lnSize);
+        ComputationalNode cd2 = layerNormalization(inputC2, parameter, false, lnSize);
         ArrayList<ComputationalNode> nodes = new ArrayList<>();
-        for (int i = 0; i < ((TransformerParameter) parameter).getN(); i++) {
-            ComputationalNode wk = new MultiplicationNode(new Tensor(parameter.initializeWeights(((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getDk(), random), new int[]{((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getDk()}));
+        for (int i = 0; i < parameter.getN(); i++) {
+            ComputationalNode wk = new MultiplicationNode(new Tensor(parameter.initializeWeights(parameter.getL(), parameter.getDk(), random), new int[]{parameter.getL(), parameter.getDk()}));
             ComputationalNode k = this.addEdge(encoder, wk, false);
-            ComputationalNode wq = new MultiplicationNode(new Tensor(parameter.initializeWeights(((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getDk(), random), new int[]{((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getDk()}));
+            ComputationalNode wq = new MultiplicationNode(new Tensor(parameter.initializeWeights(parameter.getL(), parameter.getDk(), random), new int[]{parameter.getL(), parameter.getDk()}));
             ComputationalNode q = this.addEdge(cd2, wq, false);
-            ComputationalNode wv = new MultiplicationNode(new Tensor(parameter.initializeWeights(((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getDk(), random), new int[]{((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getDk()}));
+            ComputationalNode wv = new MultiplicationNode(new Tensor(parameter.initializeWeights(parameter.getL(), parameter.getDk(), random), new int[]{parameter.getL(), parameter.getDk()}));
             ComputationalNode v = this.addEdge(encoder, wv, false);
             ComputationalNode kTranspose = this.addEdge(k, new Transpose(), false);
             ComputationalNode qk = this.addEdge(q, kTranspose, false, false);
-            ComputationalNode qkDk = this.addEdge(qk, new MultiplyByConstant(1.0 / Math.sqrt(((TransformerParameter) parameter).getDk())), false);
+            ComputationalNode qkDk = this.addEdge(qk, new MultiplyByConstant(1.0 / Math.sqrt(parameter.getDk())), false);
             ComputationalNode sQkDk = this.addEdge(qkDk, new Softmax(), false);
             ComputationalNode attention = this.addEdge(sQkDk, v, false);
             nodes.add(attention);
         }
         ConcatenatedNode concatenatedNode3 = (ConcatenatedNode) this.concatEdges(nodes, 1);
-        ComputationalNode wd2 = new MultiplicationNode(new Tensor(parameter.initializeWeights(((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getL(), random), new int[]{((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getL()}));
+        ComputationalNode wd2 = new MultiplicationNode(new Tensor(parameter.initializeWeights(parameter.getL(), parameter.getL(), random), new int[]{parameter.getL(), parameter.getL()}));
         ComputationalNode cd3 = this.addEdge(concatenatedNode3, wd2, false);
         ComputationalNode cd3cd2 = this.addAdditionEdge(cd2, cd3, false);
-        ComputationalNode yd1 = this.layerNormalization(cd3cd2, ((TransformerParameter) parameter), false, lnSize);
-        ComputationalNode od = this.feedforwardNeuralNetwork(yd1, ((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter), random, false);
+        ComputationalNode yd1 = this.layerNormalization(cd3cd2, parameter, false, lnSize);
+        ComputationalNode od = this.feedforwardNeuralNetwork(yd1, parameter.getL(), parameter, random, false);
         ComputationalNode oy = this.addAdditionEdge(od, yd1, false);
-        ComputationalNode d = this.layerNormalization(oy, ((TransformerParameter) parameter), false, lnSize);
-        ComputationalNode wdo = new MultiplicationNode(new Tensor(parameter.initializeWeights(((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getV(), random), new int[]{((TransformerParameter) parameter).getL(), ((TransformerParameter) parameter).getV()}));
+        ComputationalNode d = this.layerNormalization(oy, parameter, false, lnSize);
+        ComputationalNode wdo = new MultiplicationNode(new Tensor(parameter.initializeWeights(parameter.getL(), parameter.getV(), random), new int[]{parameter.getL(), parameter.getV()}));
         ComputationalNode decoder = this.addEdge(d, wdo, false);
-        this.addEdge(decoder, new Softmax(), false);
+        this.outputNode = this.addEdge(decoder, new Softmax(), false);
+        ComputationalNode classLabelNode = new ComputationalNode();
+        this.inputNodes.add(classLabelNode);
+        ArrayList<ComputationalNode> lossInputs = new ArrayList<>();
+        lossInputs.add(this.outputNode);
+        lossInputs.add(classLabelNode);
+        this.addFunctionEdge(lossInputs, parameter.getLossFunction(), false);
         // Training
         for (int i = 0; i < parameter.getEpoch(); i++) {
             // Shuffle
@@ -219,12 +239,10 @@ public class Transformer extends ComputationalGraph implements Serializable {
                 trainSet.set(i1, trainSet.get(i2));
                 trainSet.set(i2, tmp);
             }
-            ArrayList<Integer> classLabels = new ArrayList<>();
             for (Tensor instance : trainSet) {
-                createInputTensors(instance, this.inputNodes.get(0), this.inputNodes.get(1), classLabels, ((TransformerParameter) parameter).getL() - 1);
+                createInputTensors(instance, this.inputNodes.get(0), this.inputNodes.get(1), this.inputNodes.get(2), parameter.getL() - 1, parameter.getV());
                 this.forwardCalculation();
-                this.backpropagation(parameter.getOptimizer(), classLabels);
-                classLabels.clear();
+                this.backpropagation(parameter.getOptimizer());
             }
             parameter.getOptimizer().setLearningRate();
         }
@@ -251,7 +269,13 @@ public class Transformer extends ComputationalGraph implements Serializable {
         for (Tensor instance : testSet) {
             ArrayList<Double> classLabels;
             ArrayList<Integer> goldClassLabels = new ArrayList<>();
-            createInputTensors(instance, this.inputNodes.get(0), new ComputationalNode(false, false), goldClassLabels, ((VectorizedWord) this.dictionary.getWord(0)).getVector().size());
+            createInputTensors(instance, this.inputNodes.get(0), new ComputationalNode(false, false), this.inputNodes.get(2), ((VectorizedWord) this.dictionary.getWord(0)).getVector().size(), ((TransformerParameter) this.getParameters()).getV());
+            ArrayList<Double> classLabelValues = (ArrayList<Double>) this.inputNodes.get(2).getValue().getData();
+            for (int i = 0; i < classLabelValues.size(); i++) {
+                if (classLabelValues.get(i) == 1.0) {
+                    goldClassLabels.add(i % ((TransformerParameter) this.getParameters()).getV());
+                }
+            }
             int j = 1;
             int currentWordIndex = this.startIndex;
             do {

@@ -22,8 +22,8 @@ public class TransformerParameter extends NeuralNetworkParameter implements Seri
     private final ArrayList<Double> betaInputValues;
     private final ArrayList<Double> betaOutputValues;
 
-    public TransformerParameter(int seed, int epoch, ComputationalGraph.Optimizer.Optimizer optimizer, Initialization initialization, int wordEmbeddingLength, int multiHeadAttentionLength, int vocabularyLength, double epsilon, ArrayList<Integer> inputHiddenLayers, ArrayList<Integer> outputHiddenLayers, ArrayList<Function> inputActivationFunctions, ArrayList<Function> outputActivationFunctions, ArrayList<Double> gammaInputValues, ArrayList<Double> gammaOutputValues, ArrayList<Double> betaInputValues, ArrayList<Double> betaOutputValues) {
-        super(seed, epoch, optimizer, initialization, 0.0);
+    public TransformerParameter(int seed, int epoch, ComputationalGraph.Optimizer.Optimizer optimizer, Initialization initialization, Function loss, int wordEmbeddingLength, int multiHeadAttentionLength, int vocabularyLength, double epsilon, ArrayList<Integer> inputHiddenLayers, ArrayList<Integer> outputHiddenLayers, ArrayList<Function> inputActivationFunctions, ArrayList<Function> outputActivationFunctions, ArrayList<Double> gammaInputValues, ArrayList<Double> gammaOutputValues, ArrayList<Double> betaInputValues, ArrayList<Double> betaOutputValues) {
+        super(seed, epoch, optimizer, initialization, loss, 0.0);
         this.L = wordEmbeddingLength + 1;
         this.N = multiHeadAttentionLength;
         this.V = vocabularyLength;
