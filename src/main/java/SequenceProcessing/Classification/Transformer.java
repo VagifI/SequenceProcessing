@@ -242,7 +242,7 @@ public class Transformer extends ComputationalGraph implements Serializable {
             for (Tensor instance : trainSet) {
                 createInputTensors(instance, this.inputNodes.get(0), this.inputNodes.get(1), this.inputNodes.get(2), parameter.getL() - 1, parameter.getV());
                 this.forwardCalculation();
-                this.backpropagation(parameter.getOptimizer());
+                this.backpropagation();
             }
             parameter.getOptimizer().setLearningRate();
         }

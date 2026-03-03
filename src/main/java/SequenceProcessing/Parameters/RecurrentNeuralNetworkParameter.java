@@ -14,7 +14,7 @@ public class RecurrentNeuralNetworkParameter extends NeuralNetworkParameter impl
     private final int classLabelSize;
 
     public RecurrentNeuralNetworkParameter(int seed, int epoch, ComputationalGraph.Optimizer.Optimizer optimizer, Initialization initialization, Function loss, ArrayList<Integer> hiddenLayers, ArrayList<Function> functions, int classLabelSize) {
-        super(seed, epoch, optimizer, initialization, loss, 0.0);
+        super(seed, epoch, optimizer, initialization, loss, 0.0, 1);
         this.hiddenLayers = hiddenLayers;
         this.functions = functions;
         this.classLabelSize = classLabelSize;

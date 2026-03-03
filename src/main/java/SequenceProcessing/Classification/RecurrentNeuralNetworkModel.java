@@ -81,7 +81,7 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
             for (Tensor instance : trainSet) {
                 createInputTensors(instance, ((RecurrentNeuralNetworkParameter) this.getParameters()).getClassLabelSize());
                 this.forwardCalculation();
-                this.backpropagation(parameters.getOptimizer());
+                this.backpropagation();
             }
             parameters.getOptimizer().setLearningRate();
         }
