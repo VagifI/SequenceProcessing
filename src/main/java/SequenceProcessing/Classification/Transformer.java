@@ -176,7 +176,7 @@ public class Transformer extends ComputationalGraph implements Serializable {
 
     @Override
     public void train(ArrayList<Tensor> trainSet) {
-        TransformerParameter parameter = (TransformerParameter) this.getParameters();
+        TransformerParameter parameter = (TransformerParameter) this.parameters;
         int[] lnSize = new int[4];
         Random random = new Random(parameter.getSeed());
         // Encoder Block
@@ -269,11 +269,11 @@ public class Transformer extends ComputationalGraph implements Serializable {
         for (Tensor instance : testSet) {
             ArrayList<Double> classLabels;
             ArrayList<Integer> goldClassLabels = new ArrayList<>();
-            createInputTensors(instance, this.inputNodes.get(0), new ComputationalNode(false, false), this.inputNodes.get(2), ((VectorizedWord) this.dictionary.getWord(0)).getVector().size(), ((TransformerParameter) this.getParameters()).getV());
+            createInputTensors(instance, this.inputNodes.get(0), new ComputationalNode(false, false), this.inputNodes.get(2), ((VectorizedWord) this.dictionary.getWord(0)).getVector().size(), ((TransformerParameter) this.parameters).getV());
             ArrayList<Double> classLabelValues = (ArrayList<Double>) this.inputNodes.get(2).getValue().getData();
             for (int i = 0; i < classLabelValues.size(); i++) {
                 if (classLabelValues.get(i) == 1.0) {
-                    goldClassLabels.add(i % ((TransformerParameter) this.getParameters()).getV());
+                    goldClassLabels.add(i % ((TransformerParameter) this.parameters).getV());
                 }
             }
             int j = 1;

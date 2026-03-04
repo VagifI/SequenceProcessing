@@ -19,7 +19,6 @@ public class LongShortTermMemoryModel extends RecurrentNeuralNetworkModel implem
 
     @Override
     public void train(ArrayList<Tensor> trainSet) {
-        RecurrentNeuralNetworkParameter parameters = (RecurrentNeuralNetworkParameter) this.getParameters();
         Random random = new Random(parameters.getSeed());
         int timeStep = findTimeStep(trainSet);
         ArrayList<ComputationalNode> weights = new ArrayList<>();
@@ -100,6 +99,6 @@ public class LongShortTermMemoryModel extends RecurrentNeuralNetworkModel implem
         lossInputs.add(this.outputNode);
         lossInputs.add(classLabelNode);
         this.addFunctionEdge(lossInputs, parameters.getLossFunction(), false);
-        train(trainSet, parameters, random);
+        train(trainSet, random);
     }
 }

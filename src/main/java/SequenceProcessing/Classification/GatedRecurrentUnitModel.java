@@ -10,8 +10,8 @@ import ComputationalGraph.Node.MultiplicationNode;
 import SequenceProcessing.Functions.AdditionByConstant;
 import SequenceProcessing.Functions.RemoveBias;
 import SequenceProcessing.Functions.Switch;
-import SequenceProcessing.Parameters.RecurrentNeuralNetworkParameter;
 import Math.Tensor;
+import SequenceProcessing.Parameters.RecurrentNeuralNetworkParameter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -26,20 +26,19 @@ public class GatedRecurrentUnitModel extends RecurrentNeuralNetworkModel impleme
 
     @Override
     public void train(ArrayList<Tensor> trainSet) {
-        RecurrentNeuralNetworkParameter parameters = (RecurrentNeuralNetworkParameter) this.getParameters();
         Random random = new Random(parameters.getSeed());
         int timeStep = findTimeStep(trainSet);
         ArrayList<ComputationalNode> weights = new ArrayList<>();
         ArrayList<ComputationalNode> recurrentWeights = new ArrayList<>();
         int currentLength = wordEmbeddingLength + 1;
-        for (int i = 0; i < parameters.size(); i++) {
+        for (int i = 0; i < ((RecurrentNeuralNetworkParameter) parameters).size(); i++) {
             for (int j = 0; j < 3; j++) {
-                weights.add(new MultiplicationNode(new Tensor(parameters.initializeWeights(currentLength, parameters.getHiddenLayer(i), random), new int[]{currentLength, parameters.getHiddenLayer(i)})));
-                recurrentWeights.add(new MultiplicationNode(new Tensor(parameters.initializeWeights(parameters.getHiddenLayer(i), parameters.getHiddenLayer(i), random), new int[]{parameters.getHiddenLayer(i), parameters.getHiddenLayer(i)})));
+                weights.add(new MultiplicationNode(new Tensor(parameters.initializeWeights(currentLength, ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i), random), new int[]{currentLength, ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i)})));
+                recurrentWeights.add(new MultiplicationNode(new Tensor(parameters.initializeWeights(((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i), ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i), random), new int[]{((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i), ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i)})));
             }
-            currentLength = parameters.getHiddenLayer(i) + 1;
+            currentLength = ((RecurrentNeuralNetworkParameter) parameters).getHiddenLayer(i) + 1;
         }
-        weights.add(new MultiplicationNode(new Tensor(parameters.initializeWeights(currentLength, parameters.getClassLabelSize(), random), new int[]{currentLength, parameters.getClassLabelSize()})));
+        weights.add(new MultiplicationNode(new Tensor(parameters.initializeWeights(currentLength, ((RecurrentNeuralNetworkParameter) parameters).getClassLabelSize(), random), new int[]{currentLength, ((RecurrentNeuralNetworkParameter) parameters).getClassLabelSize()})));
         ArrayList<ComputationalNode> currentOldLayers = new ArrayList<>();
         ArrayList<ComputationalNode> outputNodes = new ArrayList<>();
         for (int k = 0; k < timeStep; k++) {
@@ -48,7 +47,7 @@ public class GatedRecurrentUnitModel extends RecurrentNeuralNetworkModel impleme
             ComputationalNode input = new MultiplicationNode(false, true);
             inputNodes.add(input);
             ComputationalNode current = input;
-            for (int i = 0; i < parameters.size(); i++) {
+            for (int i = 0; i < ((RecurrentNeuralNetworkParameter) parameters).size(); i++) {
                 ComputationalNode aw;
                 ComputationalNode aFunction;
                 if (!currentOldLayers.isEmpty()) {
@@ -56,11 +55,11 @@ public class GatedRecurrentUnitModel extends RecurrentNeuralNetworkModel impleme
                     ComputationalNode oWithoutBias = this.addEdge(currentOldLayers.get(i), new RemoveBias(), false);
                     ComputationalNode ou = this.addEdge(oWithoutBias, recurrentWeights.get((i * 3)), false);
                     ComputationalNode awOu = this.addAdditionEdge(aw, ou, false);
-                    ComputationalNode zt = this.addEdge(awOu, parameters.getActivationFunction((i * 2)), false);
+                    ComputationalNode zt = this.addEdge(awOu, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction((i * 2)), false);
                     aw = this.addEdge(current, weights.get((i * 3) + 1), false);
                     ou = this.addEdge(oWithoutBias, recurrentWeights.get((i * 3) + 1), false);
                     awOu = this.addAdditionEdge(aw, ou, false);
-                    ComputationalNode rt = this.addEdge(awOu, parameters.getActivationFunction((i * 2) + 1), false);
+                    ComputationalNode rt = this.addEdge(awOu, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction((i * 2) + 1), false);
                     aw = this.addEdge(current, weights.get((i * 3) + 2), false);
                     ComputationalNode rtHt1 = this.addEdge(rt, oWithoutBias, false, true);
                     ou = this.addEdge(rtHt1, recurrentWeights.get((i * 3) + 2), false);
@@ -73,7 +72,7 @@ public class GatedRecurrentUnitModel extends RecurrentNeuralNetworkModel impleme
                     aFunction = this.addAdditionEdge(aw, ou, true);
                 } else {
                     aw = this.addEdge(current, weights.get((i * 3)), false);
-                    ComputationalNode zt = this.addEdge(aw, parameters.getActivationFunction((i * 2)), false);
+                    ComputationalNode zt = this.addEdge(aw, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction((i * 2)), false);
                     aw = this.addEdge(current, weights.get((i * 3) + 2), false);
                     ComputationalNode hTemp = this.addEdge(aw, new Tanh(), false);
                     aFunction = this.addEdge(zt, hTemp, true, true);
@@ -93,6 +92,6 @@ public class GatedRecurrentUnitModel extends RecurrentNeuralNetworkModel impleme
         lossInputs.add(this.outputNode);
         lossInputs.add(classLabelNode);
         this.addFunctionEdge(lossInputs, parameters.getLossFunction(), false);
-        train(trainSet, parameters, random);
+        train(trainSet, random);
     }
 }
