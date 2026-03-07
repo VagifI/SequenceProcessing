@@ -47,39 +47,39 @@ public class LongShortTermMemoryModel extends RecurrentNeuralNetworkModel implem
                 ComputationalNode aFunction;
                 ComputationalNode ct;
                 if (!currentOldLayers.isEmpty()) {
-                    aw = this.addEdge(current, weights.get(i), false);
-                    ComputationalNode oWithoutBias = this.addEdge(currentOldLayers.get(i / 4), new RemoveBias(), false);
-                    ComputationalNode ou = this.addEdge(oWithoutBias, recurrentWeights.get(i), false);
+                    aw = this.addEdge(current, weights.get(i));
+                    ComputationalNode oWithoutBias = this.addEdge(currentOldLayers.get(i / 4), new RemoveBias());
+                    ComputationalNode ou = this.addEdge(oWithoutBias, recurrentWeights.get(i));
                     ComputationalNode awOu = this.addAdditionEdge(aw, ou, false);
-                    ComputationalNode it = this.addEdge(awOu, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i), false);
-                    aw = this.addEdge(current, weights.get(i + 1), false);
-                    ou = this.addEdge(oWithoutBias, recurrentWeights.get(i + 1), false);
+                    ComputationalNode it = this.addEdge(awOu, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i));
+                    aw = this.addEdge(current, weights.get(i + 1));
+                    ou = this.addEdge(oWithoutBias, recurrentWeights.get(i + 1));
                     awOu = this.addAdditionEdge(aw, ou, false);
-                    ComputationalNode ft = this.addEdge(awOu, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i + 1), false);
-                    aw = this.addEdge(current, weights.get(i + 2), false);
-                    ou = this.addEdge(oWithoutBias, recurrentWeights.get(i + 2), false);
+                    ComputationalNode ft = this.addEdge(awOu, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i + 1));
+                    aw = this.addEdge(current, weights.get(i + 2));
+                    ou = this.addEdge(oWithoutBias, recurrentWeights.get(i + 2));
                     awOu = this.addAdditionEdge(aw, ou, false);
-                    ComputationalNode ot = this.addEdge(awOu, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i + 2), false);
-                    aw = this.addEdge(current, weights.get(i + 3), false);
-                    ou = this.addEdge(oWithoutBias, recurrentWeights.get(i + 3), false);
+                    ComputationalNode ot = this.addEdge(awOu, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i + 2));
+                    aw = this.addEdge(current, weights.get(i + 3));
+                    ou = this.addEdge(oWithoutBias, recurrentWeights.get(i + 3));
                     awOu = this.addAdditionEdge(aw, ou, false);
-                    ComputationalNode cTemp = this.addEdge(awOu, new Tanh(), false);
+                    ComputationalNode cTemp = this.addEdge(awOu, new Tanh());
                     ComputationalNode ftCt1 = this.addEdge(ft, currentOldCValues.get(i / 4), false, true);
                     ComputationalNode itCtTemp = this.addEdge(it, cTemp, false, true);
                     ComputationalNode cmb = this.addAdditionEdge(ftCt1, itCtTemp, false);
-                    ct = this.addEdge(cmb, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i + 3), false);
-                    ComputationalNode tanhCt = this.addEdge(ct, new Tanh(), false);
+                    ct = this.addEdge(cmb, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i + 3));
+                    ComputationalNode tanhCt = this.addEdge(ct, new Tanh());
                     aFunction = this.addEdge(tanhCt, ot, true, true);
                 } else {
-                    aw = this.addEdge(current, weights.get(i), false);
-                    ComputationalNode it = this.addEdge(aw, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i), false);
-                    aw = this.addEdge(current, weights.get(i + 1), false);
-                    ComputationalNode ot = this.addEdge(aw, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i + 2), false);
-                    aw = this.addEdge(current, weights.get(i + 3), false);
-                    ComputationalNode cTemp = this.addEdge(aw, new Tanh(), false);
+                    aw = this.addEdge(current, weights.get(i));
+                    ComputationalNode it = this.addEdge(aw, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i));
+                    aw = this.addEdge(current, weights.get(i + 1));
+                    ComputationalNode ot = this.addEdge(aw, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i + 2));
+                    aw = this.addEdge(current, weights.get(i + 3));
+                    ComputationalNode cTemp = this.addEdge(aw, new Tanh());
                     ComputationalNode itCTemp = this.addEdge(it, cTemp, false, true);
-                    ct = this.addEdge(itCTemp, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i + 3), false);
-                    ComputationalNode tanhCt = this.addEdge(ct, new Tanh(), false);
+                    ct = this.addEdge(itCTemp, ((RecurrentNeuralNetworkParameter) parameters).getActivationFunction(i + 3));
+                    ComputationalNode tanhCt = this.addEdge(ct, new Tanh());
                     aFunction = this.addEdge(tanhCt, ot, true, true);
                 }
                 current = aFunction;
@@ -88,11 +88,11 @@ public class LongShortTermMemoryModel extends RecurrentNeuralNetworkModel implem
             }
             currentOldLayers = newOldLayers;
             currentOldCValues = newOldCValues;
-            ComputationalNode node = this.addEdge(current, weights.get(weights.size() - 1), false);
-            outputNodes.add(this.addEdge(node, switches.get(k), false));
+            ComputationalNode node = this.addEdge(current, weights.get(weights.size() - 1));
+            outputNodes.add(this.addEdge(node, switches.get(k)));
         }
         ConcatenatedNode concatenatedNode = (ConcatenatedNode) this.concatEdges(outputNodes, 0);
-        this.outputNode = this.addEdge(concatenatedNode, new Softmax(), false);
+        this.outputNode = this.addEdge(concatenatedNode, new Softmax());
         ComputationalNode classLabelNode = new ComputationalNode();
         this.inputNodes.add(classLabelNode);
         ArrayList<ComputationalNode> lossInputs = new ArrayList<>();
