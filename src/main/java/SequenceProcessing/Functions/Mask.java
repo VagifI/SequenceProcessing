@@ -1,13 +1,12 @@
 package SequenceProcessing.Functions;
 
-import ComputationalGraph.Node.ComputationalNode;
-import ComputationalGraph.Node.FunctionNode;
+import ComputationalGraph.Function.Function;
 import Math.Tensor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Mask implements ComputationalGraph.Function.Function, Serializable {
+public class Mask implements Function, Serializable {
 
     @Override
     public Tensor calculate(Tensor tensor) {
@@ -33,12 +32,5 @@ public class Mask implements ComputationalGraph.Function.Function, Serializable 
             }
         }
         return backward.hadamardProduct(new Tensor(values, tensor.getShape()));
-    }
-
-    @Override
-    public ComputationalNode addEdge(ArrayList<ComputationalNode> inputNodes, boolean isBiased) {
-        ComputationalNode newNode = new FunctionNode(isBiased, this);
-        inputNodes.get(0).add(newNode);
-        return newNode;
     }
 }

@@ -95,10 +95,7 @@ public class LongShortTermMemoryModel extends RecurrentNeuralNetworkModel implem
         this.outputNode = this.addEdge(concatenatedNode, new Softmax());
         ComputationalNode classLabelNode = new ComputationalNode();
         this.inputNodes.add(classLabelNode);
-        ArrayList<ComputationalNode> lossInputs = new ArrayList<>();
-        lossInputs.add(this.outputNode);
-        lossInputs.add(classLabelNode);
-        this.addFunctionEdge(lossInputs, parameters.getLossFunction(), false);
+        this.addLoss(classLabelNode);
         train(trainSet, random);
     }
 }

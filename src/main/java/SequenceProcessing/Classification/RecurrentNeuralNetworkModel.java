@@ -61,13 +61,7 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
         for (int i = 0; i < parameters.getEpoch(); i++) {
             // System.out.println("Epoch: " + (i + 1));
             // Shuffle
-            for (int j = 0; j < trainSet.size(); j++) {
-                int i1 = random.nextInt(trainSet.size());
-                int i2 = random.nextInt(trainSet.size());
-                Tensor tmp = trainSet.get(i1);
-                trainSet.set(i1, trainSet.get(i2));
-                trainSet.set(i2, tmp);
-            }
+            this.shuffle(trainSet, random);
             for (Tensor instance : trainSet) {
                 ArrayList<Integer> classLabels = createInputTensors(instance);
                 ArrayList<Double> classLabelValues = new ArrayList<>();
@@ -145,22 +139,20 @@ public class RecurrentNeuralNetworkModel extends ComputationalGraph implements S
         this.outputNode = this.addEdge(concatenatedNode, new Softmax());
         ComputationalNode classLabelNode = new ComputationalNode();
         this.inputNodes.add(classLabelNode);
-        ArrayList<ComputationalNode> lossInputs = new ArrayList<>();
-        lossInputs.add(this.outputNode);
-        lossInputs.add(classLabelNode);
-        this.addFunctionEdge(lossInputs, parameters.getLossFunction(), false);
+        this.addLoss(classLabelNode);
         train(trainSet, random);
     }
 
     @Override
-    protected ArrayList<Double> getOutputValue(ComputationalNode outputNode) {
+    protected ArrayList<Double> getOutputValue() {
         ArrayList<Double> classLabels = new ArrayList<>();
-        for (int i = 0; i < outputNode.getValue().getShape()[0]; i++) {
+        Tensor outputNode = this.outputNode.getValue();
+        for (int i = 0; i < outputNode.getShape()[0]; i++) {
             int index = -1;
             double max = Double.MIN_VALUE;
-            for (int j = 0; j < outputNode.getValue().getShape()[1]; j++) {
-                if (max < outputNode.getValue().getValue(new int[]{i, j})) {
-                    max = outputNode.getValue().getValue(new int[]{i, j});
+            for (int j = 0; j < outputNode.getShape()[1]; j++) {
+                if (max < outputNode.getValue(new int[]{i, j})) {
+                    max = outputNode.getValue(new int[]{i, j});
                     index = j;
                 }
             }

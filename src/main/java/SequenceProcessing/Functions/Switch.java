@@ -3,11 +3,10 @@ package SequenceProcessing.Functions;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import ComputationalGraph.Node.ComputationalNode;
-import ComputationalGraph.Node.FunctionNode;
+import ComputationalGraph.Function.Function;
 import Math.Tensor;
 
-public class Switch implements ComputationalGraph.Function.Function, Serializable {
+public class Switch implements Function, Serializable {
 
     private boolean turn;
 
@@ -41,12 +40,5 @@ public class Switch implements ComputationalGraph.Function.Function, Serializabl
             return backward;
         }
         return calculate(value);
-    }
-
-    @Override
-    public ComputationalNode addEdge(ArrayList<ComputationalNode> inputNodes, boolean isBiased) {
-        ComputationalNode newNode = new FunctionNode(isBiased, this);
-        inputNodes.get(0).add(newNode);
-        return newNode;
     }
 }

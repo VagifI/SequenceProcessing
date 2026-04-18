@@ -3,11 +3,10 @@ package SequenceProcessing.Functions;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-import ComputationalGraph.Node.ComputationalNode;
-import ComputationalGraph.Node.FunctionNode;
+import ComputationalGraph.Function.Function;
 import Math.Tensor;
 
-public class AdditionByConstant implements ComputationalGraph.Function.Function, Serializable {
+public class AdditionByConstant implements Function, Serializable {
 
     private final double constant;
 
@@ -28,12 +27,5 @@ public class AdditionByConstant implements ComputationalGraph.Function.Function,
     @Override
     public Tensor derivative(Tensor tensor, Tensor tensor1) {
         return tensor1;
-    }
-
-    @Override
-    public ComputationalNode addEdge(ArrayList<ComputationalNode> inputNodes, boolean isBiased) {
-        ComputationalNode newNode = new FunctionNode(isBiased, this);
-        inputNodes.get(0).add(newNode);
-        return newNode;
     }
 }

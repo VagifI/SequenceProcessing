@@ -214,21 +214,11 @@ public class Transformer extends ComputationalGraph implements Serializable {
         ComputationalNode decoder = this.addEdge(d, wdo);
         this.outputNode = this.addEdge(decoder, new Softmax());
         ComputationalNode classLabelNode = new ComputationalNode();
-        this.inputNodes.add(classLabelNode);
-        ArrayList<ComputationalNode> lossInputs = new ArrayList<>();
-        lossInputs.add(this.outputNode);
-        lossInputs.add(classLabelNode);
-        this.addFunctionEdge(lossInputs, parameter.getLossFunction(), false);
+        this.addLoss(classLabelNode);
         // Training
         for (int i = 0; i < parameter.getEpoch(); i++) {
             // Shuffle
-            for (int j = 0; j < trainSet.size(); j++) {
-                int i1 = random.nextInt(trainSet.size());
-                int i2 = random.nextInt(trainSet.size());
-                Tensor tmp = trainSet.get(i1);
-                trainSet.set(i1, trainSet.get(i2));
-                trainSet.set(i2, tmp);
-            }
+            this.shuffle(trainSet, random);
             for (Tensor instance : trainSet) {
                 ArrayList<Integer> classLabels = createInputTensors(instance, this.inputNodes.get(0), this.inputNodes.get(1), parameter.getL() - 1);
                 ArrayList<Double> classLabelValues = new ArrayList<>();
@@ -241,7 +231,7 @@ public class Transformer extends ComputationalGraph implements Serializable {
                         }
                     }
                 }
-                this.inputNodes.get(2).setValue(new Tensor(classLabelValues, new int[]{classLabels.size(), parameter.getV()}));
+                classLabelNode.setValue(new Tensor(classLabelValues, new int[]{classLabels.size(), parameter.getV()}));
                 this.forwardCalculation();
                 this.backpropagation();
             }
@@ -290,9 +280,9 @@ public class Transformer extends ComputationalGraph implements Serializable {
     }
 
     @Override
-    protected ArrayList<Double> getOutputValue(ComputationalNode computationalNode) {
+    protected ArrayList<Double> getOutputValue() {
         ArrayList<Double> classLabels = new ArrayList<>();
-        Tensor value = computationalNode.getValue();
+        Tensor value = outputNode.getValue();
         for (int i = 0; i < value.getShape()[0]; i++) {
             double max = Double.MIN_VALUE;
             double index = -1;

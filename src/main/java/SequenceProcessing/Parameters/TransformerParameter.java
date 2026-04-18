@@ -1,6 +1,5 @@
 package SequenceProcessing.Parameters;
 
-import ComputationalGraph.Function.Function;
 import ComputationalGraph.Initialization.Initialization;
 import ComputationalGraph.NeuralNetworkParameter;
 
@@ -15,15 +14,15 @@ public class TransformerParameter extends NeuralNetworkParameter implements Seri
     private final double epsilon;
     private final ArrayList<Integer> inputHiddenLayers;
     private final ArrayList<Integer> outputHiddenLayers;
-    private final ArrayList<ComputationalGraph.Function.Function> inputFunctions;
-    private final ArrayList<ComputationalGraph.Function.Function> outputFunctions;
+    private final ArrayList<Object> inputFunctions;
+    private final ArrayList<Object> outputFunctions;
     private final ArrayList<Double> gammaInputValues;
     private final ArrayList<Double> gammaOutputValues;
     private final ArrayList<Double> betaInputValues;
     private final ArrayList<Double> betaOutputValues;
 
-    public TransformerParameter(int seed, int epoch, ComputationalGraph.Optimizer.Optimizer optimizer, Initialization initialization, Function loss, int wordEmbeddingLength, int multiHeadAttentionLength, int vocabularyLength, double epsilon, ArrayList<Integer> inputHiddenLayers, ArrayList<Integer> outputHiddenLayers, ArrayList<Function> inputActivationFunctions, ArrayList<Function> outputActivationFunctions, ArrayList<Double> gammaInputValues, ArrayList<Double> gammaOutputValues, ArrayList<Double> betaInputValues, ArrayList<Double> betaOutputValues) {
-        super(seed, epoch, optimizer, initialization, loss, 0.0, 1);
+    public TransformerParameter(int seed, int epoch, ComputationalGraph.Optimizer.Optimizer optimizer, Initialization initialization, ComputationalGraph.Loss.Loss loss, int wordEmbeddingLength, int multiHeadAttentionLength, int vocabularyLength, double epsilon, ArrayList<Integer> inputHiddenLayers, ArrayList<Integer> outputHiddenLayers, ArrayList<Object> inputActivationFunctions, ArrayList<Object> outputActivationFunctions, ArrayList<Double> gammaInputValues, ArrayList<Double> gammaOutputValues, ArrayList<Double> betaInputValues, ArrayList<Double> betaOutputValues) {
+        super(seed, epoch, optimizer, initialization, loss, 0.0, -1);
         this.L = wordEmbeddingLength + 1;
         this.N = multiHeadAttentionLength;
         this.V = vocabularyLength;
@@ -82,11 +81,11 @@ public class TransformerParameter extends NeuralNetworkParameter implements Seri
         return outputHiddenLayers.get(index);
     }
 
-    public Function getInputActivationFunction(int index) {
+    public Object getInputActivationFunction(int index) {
         return inputFunctions.get(index);
     }
 
-    public Function getOutputActivationFunction(int index) {
+    public Object getOutputActivationFunction(int index) {
         return outputFunctions.get(index);
     }
 

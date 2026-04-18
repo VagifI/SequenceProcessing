@@ -1,5 +1,6 @@
 import ComputationalGraph.*;
-import ComputationalGraph.Function.CrossEntropyLoss;
+import ComputationalGraph.Function.SiLU;
+import ComputationalGraph.Loss.CrossEntropyLoss;
 import ComputationalGraph.Function.Function;
 import ComputationalGraph.Function.Sigmoid;
 import ComputationalGraph.Function.Tanh;
@@ -27,10 +28,10 @@ public class TransformerTest {
         ArrayList<Integer> input = new ArrayList<>();
         input.add(30);
         input.add(15);
-        ArrayList<Function> inputFunctions = new ArrayList<>();
+        ArrayList<Object> inputFunctions = new ArrayList<>();
         inputFunctions.add(new Tanh());
         inputFunctions.add(new Sigmoid());
-        ArrayList<Function> outputFunctions = new ArrayList<>();
+        ArrayList<Object> outputFunctions = new ArrayList<>();
         outputFunctions.add(new Sigmoid());
         outputFunctions.add(new Tanh());
         ArrayList<Double> gammaInput = new ArrayList<>();
