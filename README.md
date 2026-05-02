@@ -270,3 +270,19 @@ public class AnnotatedSentenceTest {
     public void setUp() throws Exception {
         sentence0 = new AnnotatedSentence(new File("sentences/0000.dev"));
 ```
+
+# BERT Implementation (Vagif Ismayilov, S027328)
+
+This fork contains my implementation of BERT (Bidirectional Encoder Representations from Transformers) in Java as part of the NLP course project at Ozyegin University.
+
+## Status
+🚧 In progress - awaiting architecture approval
+
+## Planned components
+- WordPiece tokenizer for Turkish
+- Token, position, and segment embeddings
+- Transformer encoder blocks (multi-head attention, feed-forward)
+- Masked language modeling head
+
+## Training
+Small-scale training on Turkish corpus from Starlang libraries
