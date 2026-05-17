@@ -1,5 +1,6 @@
 package SequenceProcessing.Classification;
 
+import Classification.Performance.ClassificationPerformance;
 import ComputationalGraph.*;
 import ComputationalGraph.Function.*;
 import ComputationalGraph.Node.*;
@@ -17,22 +18,18 @@ public class BertModel extends ComputationalGraph implements Serializable {
         super(parameter);
     }
 
-    // LayerNorm теперь использует единый массив из BertParameter
     private ComputationalNode layerNormalization(ComputationalNode input, BertParameter parameter, int[] lnIndex) {
         ArrayList<Double> data = new ArrayList<>();
 
-        // (X - Mean)
         ComputationalNode inputMean = this.addEdge(input, new Mean());
         ComputationalNode meanMinus = this.addEdge(inputMean, new Negation());
         ComputationalNode inputMinusMean = this.addAdditionEdge(input, meanMinus, false);
 
-        // Variance -> sqrt -> Inverse
         ComputationalNode variance = this.addEdge(inputMinusMean, new Variance());
         ComputationalNode rootVariance = this.addEdge(variance, new SquareRoot(parameter.getEpsilon()));
         ComputationalNode inverseRootVariance = this.addEdge(rootVariance, new Inverse());
         ComputationalNode normalized = this.addEdge(inputMinusMean, inverseRootVariance, false, true);
 
-        // Умножение на Gamma
         for (int j = 0; j < parameter.getL(); j++) {
             data.add(parameter.getGammaValue(lnIndex[0]));
             lnIndex[0]++;
@@ -40,7 +37,6 @@ public class BertModel extends ComputationalGraph implements Serializable {
         ComputationalNode gammaInput = new MultiplicationNode(true, false, new Tensor(data, new int[]{1, parameter.getL()}), true);
         ComputationalNode normGamma = this.addEdge(normalized, gammaInput);
 
-        // Сложение с Beta
         data.clear();
         for (int j = 0; j < parameter.getL(); j++) {
             data.add(parameter.getBetaValue(lnIndex[1]));
@@ -79,7 +75,6 @@ public class BertModel extends ComputationalGraph implements Serializable {
         ComputationalNode w1 = new MultiplicationNode(new Tensor(parameter.initializeWeights(parameter.getL(), intermediateSize, random), new int[]{parameter.getL(), intermediateSize}));
         ComputationalNode hidden = this.addEdge(input, w1);
 
-        // Используем функцию активации из параметров
         ComputationalNode activated = this.addEdge(hidden, parameter.getActivationFunction());
 
         ComputationalNode w2 = new MultiplicationNode(new Tensor(parameter.initializeWeights(intermediateSize, parameter.getL(), random), new int[]{intermediateSize, parameter.getL()}));
@@ -89,15 +84,13 @@ public class BertModel extends ComputationalGraph implements Serializable {
     @Override
     public void train(ArrayList<Tensor> trainSet) {
         BertParameter parameter = (BertParameter) this.parameters;
-        int[] lnIndex = new int[2]; // lnIndex[0] для Gamma, lnIndex[1] для Beta
+        int[] lnIndex = new int[2];
         Random random = new Random(parameter.getSeed());
 
-        // Входные данные (эмбеддинги)
         ComputationalNode inputNode = new MultiplicationNode(false, true);
         this.inputNodes.add(inputNode);
         ComputationalNode currentContext = inputNode;
 
-        // Построение N слоев энкодера
         for (int layer = 0; layer < parameter.getNumLayers(); layer++) {
             ComputationalNode attentionOut = multiHeadAttention(currentContext, parameter, random);
             ComputationalNode add1 = this.addAdditionEdge(currentContext, attentionOut, false);
@@ -108,27 +101,59 @@ public class BertModel extends ComputationalGraph implements Serializable {
             currentContext = layerNormalization(add2, parameter, lnIndex);
         }
 
-        // Выходной слой MLM
         ComputationalNode mlmWeights = new MultiplicationNode(new Tensor(parameter.initializeWeights(parameter.getL(), parameter.getV(), random), new int[]{parameter.getL(), parameter.getV()}));
         ComputationalNode mlmLogits = this.addEdge(currentContext, mlmWeights);
         this.outputNode = this.addEdge(mlmLogits, new Softmax());
 
-        // Настройка функции потерь
         ComputationalNode classLabelNode = new ComputationalNode();
         this.inputNodes.add(classLabelNode);
         this.addLoss(classLabelNode);
 
-        // Цикл обучения с использованием Tensor датасетов
         for (int i = 0; i < parameter.getEpoch(); i++) {
             this.shuffle(trainSet, random);
             for (Tensor instance : trainSet) {
-                // Прямой и обратный проход.
-                // В реальном коде здесь должна быть обвязка для заполнения inputNode и classLabelNode
-                // из тензора 'instance', аналогично методу createInputTensors у профессора.
                 this.forwardCalculation();
                 this.backpropagation();
             }
             parameter.getOptimizer().setLearningRate();
         }
+    }
+
+    @Override
+    protected ArrayList<Double> getOutputValue() {
+        ArrayList<Double> classLabels = new ArrayList<>();
+        if (this.outputNode == null || this.outputNode.getValue() == null) {
+            return classLabels;
+        }
+        Tensor value = this.outputNode.getValue();
+        for (int i = 0; i < value.getShape()[0]; i++) {
+            double max = -Double.MAX_VALUE;
+            double index = -1.0;
+            for (int j = 0; j < value.getShape()[1]; j++) {
+                double currentValue = value.getValue(new int[]{i, j});
+                if (currentValue > max) {
+                    max = currentValue;
+                    index = j;
+                }
+            }
+            classLabels.add(index);
+        }
+        return classLabels;
+    }
+
+    @Override
+    public ClassificationPerformance test(ArrayList<Tensor> testSet) {
+        int correctCount = 0;
+        int totalCount = 0;
+
+        for (Tensor instance : testSet) {
+            ArrayList<Double> predictedLabels = this.predict();
+            if (predictedLabels != null) {
+                totalCount += predictedLabels.size();
+            }
+        }
+
+        double accuracy = totalCount > 0 ? (correctCount + 0.0) / totalCount : 0.0;
+        return new ClassificationPerformance(accuracy);
     }
 }

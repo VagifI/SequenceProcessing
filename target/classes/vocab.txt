@@ -1,0 +1,15 @@
+[PAD]
+[UNK]
+[CLS]
+[SEP]
+[MASK]
+merhaba
+dünya
+uçuş
+istiyorum
+a
+b
+c
+d
+e
+i
