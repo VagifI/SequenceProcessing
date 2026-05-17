@@ -1,7 +1,7 @@
 package SequenceProcessing.Classification;
 
 import ComputationalGraph.Initialization.RandomInitialization;
-import ComputationalGraph.Loss.CrossEntropyLoss; // Убедись, что импорт совпадает с тем, что сработало у тебя
+import ComputationalGraph.Loss.CrossEntropyLoss;
 import ComputationalGraph.Optimizer.Adam;
 import ComputationalGraph.Function.Tanh;
 import SequenceProcessing.Bert.Tokenizer.HybridTokenizer;
@@ -18,7 +18,6 @@ public class BertMain {
     public static void main(String[] args) {
         System.out.println("=== ИНИЦИАЛИЗАЦИЯ ПРОЕКТА BERT ===");
 
-        // 1. Настраиваем гиперпараметры
         int hiddenSize = 768;
         int numHeads = 12;
         int numLayers = 12;
@@ -50,30 +49,22 @@ public class BertMain {
 
         System.out.println("\n=== ТЕСТИРОВАНИЕ ТОКЕНИЗАТОРА НА ДАННЫХ ПРОФЕССОРА ===");
         try {
-            // Загружаем словарь
             Vocabulary vocab = new Vocabulary("vocab.txt");
             HybridTokenizer tokenizer = new HybridTokenizer(vocab);
-
-            // Выбираем файл из папки resources (можешь поменять на atis-en.txt или любой другой)
             String fileName = "atis-tr.txt";
             System.out.println("Читаем датасет: " + fileName + "\n");
 
             InputStreamReader fr = new InputStreamReader(FileUtils.getInputStream(fileName));
             BufferedReader br = new BufferedReader(fr);
-
             String line;
             int count = 0;
 
-            // Читаем первые 5 строк текста для проверки
             while ((line = br.readLine()) != null && count < 5) {
                 if (line.trim().isEmpty() || line.contains("<S>") || line.contains("</S>")) {
-                    continue; // Пропускаем пустые строки и теги начала/конца
+                    continue;
                 }
 
-                // Очищаем строку от лишних пробелов (убираем метки, если они есть)
                 String sentence = line.trim();
-
-                // Прогоняем предложение через наш гибридный алгоритм
                 ArrayList<Integer> tokenIds = tokenizer.encode(sentence);
 
                 System.out.println("Оригинал : " + sentence);

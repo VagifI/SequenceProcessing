@@ -67,6 +67,11 @@
             <version>4.13.1</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.github.starlangsoftware</groupId>
+            <artifactId>MorphologicalAnalysis</artifactId>
+            <version>1.0.62</version>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
