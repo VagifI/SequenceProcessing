@@ -5,8 +5,10 @@ import ComputationalGraph.Loss.CrossEntropyLoss;
 import ComputationalGraph.Optimizer.Adam;
 import ComputationalGraph.Function.Tanh;
 import SequenceProcessing.Bert.Tokenizer.HybridTokenizer;
+import SequenceProcessing.Bert.Tokenizer.VocabBuilder;
 import SequenceProcessing.Bert.Tokenizer.Vocabulary;
 import SequenceProcessing.Parameters.BertParameter;
+
 import Util.FileUtils;
 
 import java.io.BufferedReader;
@@ -17,7 +19,6 @@ public class BertMain {
 
     public static void main(String[] args) {
         System.out.println("=== ИНИЦИАЛИЗАЦИЯ ПРОЕКТА BERT ===");
-
         int hiddenSize = 768;
         int numHeads = 12;
         int numLayers = 12;
@@ -37,7 +38,7 @@ public class BertMain {
                 10,
                 new Adam(0.001, 0.0, 0.9, 0.999, epsilon),
                 new RandomInitialization(),
-                new CrossEntropyLoss(), // Твоя функция потерь
+                new CrossEntropyLoss(),
                 hiddenSize, numHeads, numLayers, vocabSize, epsilon,
                 new Tanh(),
                 gammaValues, betaValues
@@ -46,16 +47,26 @@ public class BertMain {
         System.out.println("2. Сборка Вычислительного Графа...");
         BertModel bert = new BertModel(parameter);
         System.out.println("   [OK] BERT успешно собран! Слоев: " + parameter.getNumLayers());
+        System.out.println("\n=== ОБУЧЕНИЕ СЛОВАРЯ ===");
+
+        String[] trainingFiles = {
+                "atis-tr.txt"
+        };
+
+        String newVocabPath = "vocab_real.txt";
+        VocabBuilder.build(trainingFiles, newVocabPath);
 
         System.out.println("\n=== ТЕСТИРОВАНИЕ ТОКЕНИЗАТОРА НА ДАННЫХ ПРОФЕССОРА ===");
         try {
-            Vocabulary vocab = new Vocabulary("vocab.txt");
+            Vocabulary vocab = new Vocabulary(newVocabPath);
             HybridTokenizer tokenizer = new HybridTokenizer(vocab);
+
             String fileName = "atis-tr.txt";
-            System.out.println("Читаем датасет: " + fileName + "\n");
+            System.out.println("Читаем датасет для проверки: " + fileName + "\n");
 
             InputStreamReader fr = new InputStreamReader(FileUtils.getInputStream(fileName));
             BufferedReader br = new BufferedReader(fr);
+
             String line;
             int count = 0;
 
