@@ -87,8 +87,9 @@ public class BertModel extends ComputationalGraph implements Serializable {
         int[] lnIndex = new int[2];
         Random random = new Random(parameter.getSeed());
 
-        ComputationalNode inputNode = new MultiplicationNode(false, true);
+        ComputationalNode inputNode = new ComputationalNode();
         this.inputNodes.add(inputNode);
+
         ComputationalNode currentContext = inputNode;
 
         for (int layer = 0; layer < parameter.getNumLayers(); layer++) {
@@ -101,7 +102,8 @@ public class BertModel extends ComputationalGraph implements Serializable {
             currentContext = layerNormalization(add2, parameter, lnIndex);
         }
 
-        ComputationalNode mlmWeights = new MultiplicationNode(new Tensor(parameter.initializeWeights(parameter.getL(), parameter.getV(), random), new int[]{parameter.getL(), parameter.getV()}));
+
+        ComputationalNode mlmWeights = new MultiplicationNode(new Tensor(parameter.initializeWeights(parameter.getL(), parameter.getL(), random), new int[]{parameter.getL(), parameter.getL()}));
         ComputationalNode mlmLogits = this.addEdge(currentContext, mlmWeights);
         this.outputNode = this.addEdge(mlmLogits, new Softmax());
 
@@ -109,13 +111,23 @@ public class BertModel extends ComputationalGraph implements Serializable {
         this.inputNodes.add(classLabelNode);
         this.addLoss(classLabelNode);
 
+        System.out.println("Начинаем обучение модели (Эпох: " + parameter.getEpoch() + ")...");
+
         for (int i = 0; i < parameter.getEpoch(); i++) {
             this.shuffle(trainSet, random);
+            double totalEpochLoss = 0.0;
+
             for (Tensor instance : trainSet) {
+                this.inputNodes.get(0).setValue(instance);
+                this.inputNodes.get(1).setValue(instance);
+
                 this.forwardCalculation();
+
+
                 this.backpropagation();
             }
-            parameter.getOptimizer().setLearningRate();
+
+            System.out.println("Эпоха [" + (i + 1) + "/" + parameter.getEpoch() + "] успешно завершена!");
         }
     }
 

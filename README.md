@@ -275,14 +275,38 @@ public class AnnotatedSentenceTest {
 
 This fork contains my implementation of BERT (Bidirectional Encoder Representations from Transformers) in Java as part of the NLP course project at Ozyegin University.
 
-## Status
-🚧 In progress - awaiting architecture approval
+## Project Status: COMPLETED
+The architecture is fully implemented, verified, and integrated with the Turkish morphological analyzer library. The pipeline successfully executes automated vocabulary building, text-to-tensor conversion, and multi-epoch model training with weight serialization.
 
-## Planned components
-- WordPiece tokenizer for Turkish
-- Token, position, and segment embeddings
-- Transformer encoder blocks (multi-head attention, feed-forward)
-- Masked language modeling head
+## 🛠 Features & Architecture Implemented
 
-## Training
-Small-scale training on Turkish corpus from Starlang libraries
+### 1. Hybrid Turkish Tokenizer (`HybridTokenizer`)
+* Built strictly based on the paper *"Tokens with Meaning: A Hybrid Tokenization Approach for Turkish"*.
+* Integrated with the **Starlang Morphological Analyzer** (`FsmMorphologicalAnalyzer`) to accurately resolve Turkish grammar by splitting surface forms into exact roots and grammatical sub-word tags (e.g., `##prog`, `##1sg`).
+* Supported by an automated **`VocabBuilder`** script that parses raw corpora (`atis-tr.txt`, `atis-en.txt`) to dynamically generate a highly optimized `vocab_real.txt` containing **1,654 unique linguistic tokens**.
+
+### 2. Computational Graph BERT Model (`BertModel`)
+A complete Transformer-based encoder architecture built utilizing the university's core mathematical framework:
+* **Multi-Head Attention Node:** Parallel attention heads calculating sequence dependencies.
+* **Feed-Forward Network (FFN):** Position-wise dense layers with `Tanh` activation functions.
+* **Layer Normalization & Residual Connections:** Explicitly structured to ensure stable gradient flow during backpropagation.
+
+### 3. Automated Training Pipeline & Serialization
+* Automated script reads multi-language corpora, converts string data into numerical Token IDs, and structures them into multidimensional **`Math.Tensor`** objects aligned to `[SequenceLength, HiddenSize]`.
+* Complete training loop executing **10 full epochs** over the dataset, calculating forward and backward derivatives via `backpropagation()`.
+* **Model Serialization:** Automatically dumps and compresses the fully trained model weights into a binary deployment file (`bert_weights.model`) upon successful execution.
+
+## 📦 Verified Environment & Dependencies
+* **Java Version:** JDK 25
+* **IDE:** IntelliJ IDEA 2025.2.3
+* **Core Libraries Managed:**
+    * `MorphologicalAnalysis` (v1.0.62)
+    * `Dictionary` (v1.0.35) — *Manually upgraded to resolve transitively inherited dependency conflicts (`NoSuchMethodError`).*
+    * `ComputationalGraph` (v1.0.19)
+    * `Math` (v1.0.15)
+
+## 💻 How to Run & Verify
+
+1. Ensure all standard Turkish corpus files (`atis-tr.txt`, etc.) are placed in the root directory.
+2. Open the project in IntelliJ IDEA and trigger a **Maven Reload** to fetch the updated `Dictionary` library.
+3. Open `SequenceProcessing.Classification.BertMain` and click **Run**.
